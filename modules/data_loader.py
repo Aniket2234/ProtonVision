@@ -64,7 +64,7 @@ class DataLoader:
             else:
                 raise ValueError(f"Handler not implemented for {file_extension}")
             
-            # Validate and clean the dataset
+            # Validate and clean the dataset with robust handling
             dataset = self._validate_and_clean(dataset)
             
             # Store current dataset
@@ -332,17 +332,29 @@ class DataLoader:
         return dataset
     
     def _infer_data_types(self, dataset: pd.DataFrame) -> pd.DataFrame:
-        """Infer and convert appropriate data types"""
+        """Infer and convert appropriate data types with robust JSON serialization support"""
         
         for column in dataset.columns:
             try:
+                # Handle object columns that may cause JSON serialization issues
+                if dataset[column].dtype == 'object':
+                    # Convert complex objects to strings
+                    dataset[column] = dataset[column].astype(str, errors='ignore')
+                    # Clean up common null representations
+                    dataset[column] = dataset[column].replace(['nan', 'NaN', 'None', '<NA>', 'null', 'NULL'], pd.NA)
+                    
+                    # Try to convert to numeric if possible
+                    if self._is_numeric_column(dataset[column]):
+                        dataset[column] = pd.to_numeric(dataset[column], errors='coerce')
+                        continue
+                
                 # Skip if already numeric
-                if pd.api.types.is_numeric_dtype(dataset[column]):
+                elif pd.api.types.is_numeric_dtype(dataset[column]):
                     continue
                 
-                # Try to convert to numeric
-                if self._is_numeric_column(dataset[column]):
-                    dataset[column] = pd.to_numeric(dataset[column], errors='coerce')
+                # Handle datetime types by converting to string
+                elif dataset[column].dtype.name.startswith('datetime') or dataset[column].dtype.name.startswith('timedelta'):
+                    dataset[column] = dataset[column].astype(str)
                     continue
                 
                 # Try to convert to datetime
@@ -356,7 +368,21 @@ class DataLoader:
                 
             except Exception as e:
                 self.logger.debug(f"Type inference failed for column {column}: {str(e)}")
+                # Fallback: convert problematic columns to string
+                try:
+                    dataset[column] = dataset[column].astype(str, errors='ignore')
+                except:
+                    pass
                 continue
+        
+        # Final cleanup to ensure JSON serializability
+        try:
+            # Convert any remaining problematic data types
+            for col in dataset.columns:
+                if dataset[col].dtype.name in ['category', 'period', 'interval']:
+                    dataset[col] = dataset[col].astype(str)
+        except:
+            pass
         
         return dataset
     

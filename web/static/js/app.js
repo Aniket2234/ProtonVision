@@ -90,12 +90,18 @@ class SafeDataApp {
 
     async handleFileUpload() {
         const fileInput = document.getElementById('file-input');
-        const file = fileInput.files[0];
         
-        if (!file) {
+        if (!fileInput) {
+            this.showStatus('File input not found', 'danger');
+            return;
+        }
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
             this.showStatus('Please select a file', 'warning');
             return;
         }
+        
+        const file = fileInput.files[0];
 
         const formData = new FormData();
         formData.append('file', file);
