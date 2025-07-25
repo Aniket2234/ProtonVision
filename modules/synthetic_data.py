@@ -64,13 +64,23 @@ class SyntheticDataGenerator:
             
             # Generate synthetic data based on model type
             if model_type == 'GAN':
-                result = self._generate_with_gan(processed_data, n_samples, **kwargs)
+                if HAS_TENSORFLOW:
+                    result = self._generate_with_gan(processed_data, n_samples, **kwargs)
+                else:
+                    self.logger.warning("TensorFlow not available, falling back to statistical approximation")
+                    result = self._generate_with_statistical_approximation(processed_data, n_samples, **kwargs)
             elif model_type == 'VAE':
-                result = self._generate_with_vae(processed_data, n_samples, **kwargs)
+                if HAS_TENSORFLOW:
+                    result = self._generate_with_vae(processed_data, n_samples, **kwargs)
+                else:
+                    self.logger.warning("TensorFlow not available, falling back to statistical approximation")
+                    result = self._generate_with_statistical_approximation(processed_data, n_samples, **kwargs)
             elif model_type == 'Bayesian Network':
                 result = self._generate_with_bayesian_network(processed_data, n_samples, **kwargs)
             elif model_type == 'Copula':
                 result = self._generate_with_copula(processed_data, n_samples, **kwargs)
+            elif model_type == 'Statistical':
+                result = self._generate_with_statistical_approximation(processed_data, n_samples, **kwargs)
             else:
                 raise ValueError(f"Unsupported model type: {model_type}")
             
@@ -392,8 +402,10 @@ class SyntheticDataGenerator:
                 'training_metrics': {'method': 'noisy_resampling'}
             }
     
-    def _build_generator(self, latent_dim: int, n_features: int) -> keras.Model:
+    def _build_generator(self, latent_dim: int, n_features: int):
         """Build generator network for GAN"""
+        if not HAS_TENSORFLOW:
+            raise ImportError("TensorFlow is required for GAN generation but not available")
         
         model = keras.Sequential([
             layers.Dense(128, activation='relu', input_shape=(latent_dim,)),
@@ -407,8 +419,10 @@ class SyntheticDataGenerator:
         
         return model
     
-    def _build_discriminator(self, n_features: int) -> keras.Model:
+    def _build_discriminator(self, n_features: int):
         """Build discriminator network for GAN"""
+        if not HAS_TENSORFLOW:
+            raise ImportError("TensorFlow is required for discriminator generation but not available")
         
         model = keras.Sequential([
             layers.Dense(512, activation='relu', input_shape=(n_features,)),
@@ -422,8 +436,10 @@ class SyntheticDataGenerator:
         
         return model
     
-    def _build_vae(self, n_features: int, latent_dim: int) -> Tuple[keras.Model, keras.Model, keras.Model]:
+    def _build_vae(self, n_features: int, latent_dim: int):
         """Build VAE (encoder, decoder, full model)"""
+        if not HAS_TENSORFLOW:
+            raise ImportError("TensorFlow is required for VAE generation but not available")
         
         # Encoder
         encoder_input = keras.Input(shape=(n_features,))

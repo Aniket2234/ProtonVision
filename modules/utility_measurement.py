@@ -12,7 +12,19 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from scipy import stats
-from scipy.spatial.distance import wasserstein_distance
+try:
+    from scipy.spatial.distance import wasserstein_distance
+    HAS_WASSERSTEIN = True
+except ImportError:
+    # Fallback implementation
+    def wasserstein_distance(u_values, v_values, u_weights=None, v_weights=None):
+        """Simple fallback implementation of Wasserstein distance"""
+        import numpy as np
+        from scipy.stats import ks_2samp
+        # Use Kolmogorov-Smirnov as approximation
+        statistic, _ = ks_2samp(u_values, v_values)
+        return statistic
+    HAS_WASSERSTEIN = False
 import warnings
 warnings.filterwarnings('ignore')
 

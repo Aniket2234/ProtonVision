@@ -20,8 +20,9 @@ class DataLoader:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.supported_formats = ['.csv', '.xlsx', '.xls', '.json', '.parquet', '.tsv']
+        self.current_dataset = None
         
-    def load_file(self, file_path: Union[str, Path]) -> pd.DataFrame:
+    def load_file(self, file_path: Union[str, Path]) -> Dict[str, Any]:
         """
         Load data from various file formats
         
@@ -29,11 +30,7 @@ class DataLoader:
             file_path: Path to the data file
             
         Returns:
-            Loaded pandas DataFrame
-            
-        Raises:
-            ValueError: If file format is not supported
-            FileNotFoundError: If file doesn't exist
+            Dictionary with success status and data information
         """
         file_path = Path(file_path)
         
@@ -64,12 +61,36 @@ class DataLoader:
             # Validate and clean the dataset
             dataset = self._validate_and_clean(dataset)
             
+            # Store current dataset
+            self.current_dataset = dataset
+            
+            # Create data info for web response
+            data_info = {
+                'filename': file_path.name,
+                'rows': len(dataset),
+                'columns': len(dataset.columns),
+                'size': file_path.stat().st_size,
+                'format': file_extension.upper().lstrip('.'),
+                'column_names': list(dataset.columns),
+                'data_types': dataset.dtypes.to_dict(),
+                'memory_usage': dataset.memory_usage(deep=True).sum()
+            }
+            
             self.logger.info(f"Successfully loaded {len(dataset)} records with {len(dataset.columns)} columns")
-            return dataset
+            
+            return {
+                'success': True,
+                'data_info': data_info,
+                'message': f'Successfully loaded {len(dataset)} records'
+            }
             
         except Exception as e:
             self.logger.error(f"Failed to load data from {file_path}: {str(e)}")
-            raise
+            return {
+                'success': False,
+                'error': str(e),
+                'message': f'Failed to load data: {str(e)}'
+            }
     
     def _detect_encoding(self, file_path: Path) -> str:
         """Detect file encoding"""
