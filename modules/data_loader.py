@@ -67,13 +67,13 @@ class DataLoader:
             # Create data info for web response
             data_info = {
                 'filename': file_path.name,
-                'rows': len(dataset),
-                'columns': len(dataset.columns),
-                'size': file_path.stat().st_size,
+                'rows': int(len(dataset)),
+                'columns': int(len(dataset.columns)),
+                'size': int(file_path.stat().st_size),
                 'format': file_extension.upper().lstrip('.'),
                 'column_names': list(dataset.columns),
-                'data_types': dataset.dtypes.to_dict(),
-                'memory_usage': dataset.memory_usage(deep=True).sum()
+                'data_types': {str(k): str(v) for k, v in dataset.dtypes.to_dict().items()},
+                'memory_usage': int(dataset.memory_usage(deep=True).sum())
             }
             
             self.logger.info(f"Successfully loaded {len(dataset)} records with {len(dataset.columns)} columns")
@@ -187,18 +187,24 @@ class DataLoader:
             # Handle different JSON structures
             if isinstance(data, list):
                 # List of records
-                return pd.DataFrame(data)
+                df = pd.DataFrame(data)
             elif isinstance(data, dict):
                 # Check if it's a dictionary with data key
                 if 'data' in data:
-                    return pd.DataFrame(data['data'])
+                    df = pd.DataFrame(data['data'])
                 elif 'records' in data:
-                    return pd.DataFrame(data['records'])
+                    df = pd.DataFrame(data['records'])
                 else:
-                    # Treat as single record
-                    return pd.DataFrame([data])
+                    # Try to normalize the nested structure
+                    try:
+                        df = pd.json_normalize(data)
+                    except:
+                        # Treat as single record
+                        df = pd.DataFrame([data])
             else:
                 raise ValueError("Unsupported JSON structure")
+            
+            return df
                 
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON format: {str(e)}")

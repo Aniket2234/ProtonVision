@@ -15,6 +15,42 @@ class SafeDataApp {
             this.handleFileUpload();
         });
 
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, this.preventDefaults, false);
+            document.body.addEventListener(eventName, this.preventDefaults, false);
+        });
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        // Handle dropped files
+        uploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                this.updateFileDisplay(files[0]);
+                this.handleFileUpload();
+            }
+        });
+
+        // Handle file input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                this.updateFileDisplay(e.target.files[0]);
+            }
+        });
+
         // Analysis buttons
         document.getElementById('btn-risk-assessment').addEventListener('click', () => {
             this.selectAnalysis('risk_assessment');
@@ -461,6 +497,25 @@ class SafeDataApp {
         } else {
             progressDiv.classList.add('d-none');
         }
+    }
+
+    preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    updateFileDisplay(file) {
+        const uploadArea = document.getElementById('upload-area');
+        uploadArea.innerHTML = `
+            <div class="file-selected">
+                <div class="file-name">
+                    <i class="fas fa-file me-2"></i>${file.name}
+                </div>
+                <div class="file-details mt-2">
+                    <small>Size: ${this.formatBytes(file.size)} | Type: ${file.type || 'Unknown'}</small>
+                </div>
+            </div>
+        `;
     }
 
     formatBytes(bytes) {

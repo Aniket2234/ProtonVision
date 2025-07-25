@@ -17,7 +17,10 @@
                 {{ app_info.name }}
             </a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text">
+                <a class="nav-link" href="/help">
+                    <i class="fas fa-question-circle me-1"></i>Help
+                </a>
+                <span class="navbar-text ms-3">
                     <small>{{ app_info.description }}</small>
                 </span>
             </div>
@@ -26,6 +29,27 @@
 
     <!-- Main Content -->
     <div class="container mt-4">
+        <!-- Welcome Banner -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-primary border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="alert-heading mb-2">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Welcome to SafeData Pipeline
+                            </h4>
+                            <p class="mb-2">Professional privacy-preserving data analysis tool. Upload your data and run privacy assessments with just a few clicks.</p>
+                            <small><strong>How to use:</strong> Upload a file → Select analysis type → Run analysis → Download report</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <i class="fas fa-chart-line" style="font-size: 4rem; opacity: 0.3;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Status Alert -->
         <div id="status-alert" class="alert alert-info d-none" role="alert">
             <i class="fas fa-info-circle me-2"></i>
@@ -47,10 +71,20 @@
                         <form id="upload-form" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label for="file-input" class="form-label">Select Data File</label>
-                                <input type="file" class="form-control" id="file-input" 
-                                       accept=".csv,.xlsx,.xls,.json,.parquet,.tsv">
-                                <div class="form-text">
-                                    Supported formats: CSV, Excel, JSON, Parquet, TSV (Max: 500MB)
+                                <div class="upload-area border-2 border-dashed rounded p-4 text-center" id="upload-area">
+                                    <div class="upload-icon mb-3">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                    </div>
+                                    <p class="mb-2">Drag and drop your file here or click to browse</p>
+                                    <input type="file" class="form-control d-none" id="file-input" 
+                                           accept=".csv,.xlsx,.xls,.json,.parquet,.tsv">
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file-input').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Choose File
+                                    </button>
+                                </div>
+                                <div class="form-text mt-2">
+                                    <strong>Supported formats:</strong> CSV, Excel (.xlsx, .xls), JSON, Parquet, TSV<br>
+                                    <strong>Maximum file size:</strong> 500MB
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary">
@@ -85,19 +119,51 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-outline-warning" id="btn-risk-assessment" disabled>
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Risk Assessment
-                            </button>
-                            <button class="btn btn-outline-success" id="btn-privacy-enhancement" disabled>
-                                <i class="fas fa-shield-alt me-2"></i>
-                                Privacy Enhancement
-                            </button>
-                            <button class="btn btn-outline-info" id="btn-utility-measurement" disabled>
-                                <i class="fas fa-balance-scale me-2"></i>
-                                Utility Measurement
-                            </button>
+                        <div class="analysis-options">
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <button class="btn btn-outline-warning w-100 analysis-btn" id="btn-risk-assessment" disabled>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-exclamation-triangle me-3 fa-lg"></i>
+                                                <div class="text-start">
+                                                    <div class="fw-bold">Risk Assessment</div>
+                                                    <small class="text-muted">Identify privacy vulnerabilities</small>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-outline-success w-100 analysis-btn" id="btn-privacy-enhancement" disabled>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-shield-alt me-3 fa-lg"></i>
+                                                <div class="text-start">
+                                                    <div class="fw-bold">Privacy Enhancement</div>
+                                                    <small class="text-muted">Apply privacy protection techniques</small>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-outline-info w-100 analysis-btn" id="btn-utility-measurement" disabled>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-balance-scale me-3 fa-lg"></i>
+                                                <div class="text-start">
+                                                    <div class="fw-bold">Utility Measurement</div>
+                                                    <small class="text-muted">Measure data quality preservation</small>
+                                                </div>
+                                            </div>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Analysis Parameters -->

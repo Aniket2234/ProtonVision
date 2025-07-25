@@ -68,6 +68,11 @@ def index():
     app_info = get_app_info()
     return render_template('index.html', app_info=app_info)
 
+@app.route('/help')
+def help_page():
+    """Help and usage guide page"""
+    return render_template('help.html')
+
 @app.route('/api/status')
 def api_status():
     """API status endpoint"""
