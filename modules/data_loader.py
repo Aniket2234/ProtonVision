@@ -19,7 +19,7 @@ class DataLoader:
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.supported_formats = ['.csv', '.xlsx', '.xls', '.json', '.parquet', '.tsv']
+        self.supported_formats = ['.csv', '.xlsx', '.xls', '.json', '.parquet', '.tsv', '.txt', '.jsonl', '.feather', '.pkl', '.pickle']
         self.current_dataset = None
         
     def load_file(self, file_path: Union[str, Path]) -> Dict[str, Any]:
@@ -45,7 +45,7 @@ class DataLoader:
         self.logger.info(f"Loading data from {file_path}")
         
         try:
-            if file_extension == '.csv':
+            if file_extension in ['.csv', '.txt']:
                 dataset = self._load_csv(file_path)
             elif file_extension == '.tsv':
                 dataset = self._load_tsv(file_path)
@@ -53,8 +53,14 @@ class DataLoader:
                 dataset = self._load_excel(file_path)
             elif file_extension == '.json':
                 dataset = self._load_json(file_path)
+            elif file_extension == '.jsonl':
+                dataset = self._load_jsonl(file_path)
             elif file_extension == '.parquet':
                 dataset = self._load_parquet(file_path)
+            elif file_extension == '.feather':
+                dataset = self._load_feather(file_path)
+            elif file_extension in ['.pkl', '.pickle']:
+                dataset = self._load_pickle(file_path)
             else:
                 raise ValueError(f"Handler not implemented for {file_extension}")
             
@@ -211,12 +217,48 @@ class DataLoader:
         except Exception as e:
             raise ValueError(f"Failed to load JSON file: {str(e)}")
     
+    def _load_jsonl(self, file_path: Path) -> pd.DataFrame:
+        """Load JSON Lines file"""
+        try:
+            records = []
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        records.append(json.loads(line.strip()))
+            return pd.DataFrame(records)
+        except Exception as e:
+            raise ValueError(f"Failed to load JSONL file: {str(e)}")
+    
     def _load_parquet(self, file_path: Path) -> pd.DataFrame:
         """Load Parquet file"""
         try:
             return pd.read_parquet(file_path)
         except Exception as e:
             raise ValueError(f"Failed to load Parquet file: {str(e)}")
+    
+    def _load_feather(self, file_path: Path) -> pd.DataFrame:
+        """Load Feather file"""
+        try:
+            return pd.read_feather(file_path)
+        except Exception as e:
+            raise ValueError(f"Failed to load Feather file: {str(e)}")
+    
+    def _load_pickle(self, file_path: Path) -> pd.DataFrame:
+        """Load Pickle file"""
+        try:
+            import pickle
+            with open(file_path, 'rb') as f:
+                data = pickle.load(f)
+            if isinstance(data, pd.DataFrame):
+                return data
+            elif isinstance(data, dict):
+                return pd.DataFrame(data)
+            elif isinstance(data, list):
+                return pd.DataFrame(data)
+            else:
+                raise ValueError("Unsupported pickle data type")
+        except Exception as e:
+            raise ValueError(f"Failed to load Pickle file: {str(e)}")
     
     def _validate_and_clean(self, dataset: pd.DataFrame) -> pd.DataFrame:
         """Validate and clean the loaded dataset"""

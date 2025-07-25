@@ -102,10 +102,24 @@ def api_upload():
         result = safedata_app.data_loader.load_file(str(temp_path))
         
         if result['success']:
+            # Ensure all data is JSON serializable
+            data_info = result['data_info']
+            safe_data_info = {
+                'filename': str(data_info.get('filename', '')),
+                'rows': int(data_info.get('rows', 0)),
+                'columns': int(data_info.get('columns', 0)),
+                'size': int(data_info.get('size', 0)),
+                'format': str(data_info.get('format', '')),
+                'column_names': [str(col) for col in data_info.get('column_names', [])],
+                'data_types': {str(k): str(v) for k, v in data_info.get('data_types', {}).items()},
+                'memory_usage': int(data_info.get('memory_usage', 0)),
+                'sample_data': data_info.get('sample_data', [])
+            }
+            
             return jsonify({
                 'success': True,
                 'message': 'File uploaded successfully',
-                'data_info': result['data_info']
+                'data_info': safe_data_info
             })
         else:
             return jsonify({
